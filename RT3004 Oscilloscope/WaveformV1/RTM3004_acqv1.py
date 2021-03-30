@@ -34,9 +34,17 @@ if len(sys.argv) < 2:
     sys.exit("ERROR: Need to give number of events as command line options!")
 nWaveforms = int(float(sys.argv[1]))    
 
-# Second system argument, if given, will define whether the system will be in test mode.
+# Second system argument is the file name and folder to save the waveforms to
+# File extension defined here separately
+if len(sys.argv) >= 2:
+    filename = str(sys.argv[2])
+else:
+    filename = "testdata/test"
+fileext=".dat"
+
+# Third system argument, if given, will define whether the system will be in test mode.
 if len(sys.argv)>2:
-    testmode = sys.argv[2]
+    testmode = sys.argv[3]
 else:
     testmode = "False"
 
@@ -279,11 +287,15 @@ def test():
 
 def main():
     global nWaveforms
+    global filename
+    global fileext
     
     init()
-    data, datakey = getWaveforms()
-    WriteFile(data,datakey,"testdata/test.dat")
-    #_thread.start_new_thread(WriteFile, (data, datakey, "testdata/test.dat"))
+    for i in range(nWaveforms):
+        savename = filename+str(i+1)+fileext
+        data, datakey = getWaveforms()
+        WriteFile(data,datakey,savename)
+        #_thread.start_new_thread(WriteFile, (data,datakey,savename))
     
 
 def maintest():    
