@@ -1,5 +1,6 @@
 import time
 import sys
+import os
 import _thread
 import struct
 import numpy as np
@@ -8,7 +9,6 @@ import pyvisa as visa
 def FindUSB():
     # Find the USB address the RTM3004 is plugged into.
     # Note, at the moment the program is written specifically for USB.
-    print(rm)
     ResList=rm.list_resources()
     
     for ResID in ResList:
@@ -36,14 +36,20 @@ nWaveforms = int(float(sys.argv[1]))
 
 # Second system argument is the file name and folder to save the waveforms to
 # File extension defined here separately
-if len(sys.argv) >= 2:
+if len(sys.argv) > 2:
     filename = str(sys.argv[2])
 else:
     filename = "testdata/test"
-fileext=".dat"
+fileext = ".dat"
+# Create folders if they don't exist yet
+folderindex = filename.rfind("/")
+folderpath = filename[0:folderindex]
+if not os.path.exists(folderpath):
+        os.makedirs(folderpath)
+        print("Folder created")
 
 # Third system argument, if given, will define whether the system will be in test mode.
-if len(sys.argv)>2:
+if len(sys.argv)>3:
     testmode = sys.argv[3]
 else:
     testmode = "False"
@@ -102,10 +108,11 @@ def init():
                      ["CHAN4:STAT OFF", "CHAN4:COUP DC", "CHAN4:SCAL 2", "CHAN4:OFFS 0"]]
     
     # Settings for tuning waveform graph
+    # TRIG:A:SOUR CH<n>|EXT
     # TRIG:A:LEV<n> where n corresponds to the channel (5 = external trigger)
     ### DO NOT TOUCH "FORM" COMMANDS UNLESS YOU WANNA REWRITE THE DECODER AS WELL ###
     WAVEFORM_SETTINGS = ["TIM:SCAL 100E-3", "TIM:POS 1.5E-6", "ACQ:POIN 20000", "ACQ:INT SMHD", \
-                         "TRIG:A:MODE NORM", "TRIG:A:SOUR 1", "TRIG:A:LEV1 1", "TRIG:A:EDGE:SLOP POS", \
+                         "TRIG:A:MODE NORM", "TRIG:A:SOUR CH1", "TRIG:A:LEV1 200E-3", "TRIG:A:EDGE:SLOP POS", \
                          "FORM REAL", "FORM:BORD LSBF"]
     
     # Other settings.
@@ -170,16 +177,15 @@ def getWaveforms():
     global ComparisonChannel
     global CHANMEAS
     
+    # Check which channels are online for measurement
     for i in range(len(CHANMEAS)):
         STAT = int(instr.query("CHAN"+str(i+1)+":STAT?"))
-        print(STAT=="1")
         if i+1==ComparisonChannel and STAT==0:
             sys.exit("ERROR: Comparison channel offline, quitting program")
         if STAT == 1:
             CHANMEAS[i] = True
         else:
             CHANMEAS[i] = False
-    print(CHANMEAS)
     while True:
         # Initialize data array
         data=[]
@@ -188,12 +194,10 @@ def getWaveforms():
         # Read all data channels
         if CHANMEAS[0]:
             instr.write("CHAN1:DATA?")
-            print("Here 1")
             ch1 = instr.read_raw()
             data.append(ch1)
             datakey.append("CHAN1")
         if CHANMEAS[1]:
-            print("Here 2")
             instr.write("CHAN2:DATA?")
             ch2 = instr.read_raw()
             data.append(ch2)
@@ -295,6 +299,7 @@ def main():
         savename = filename+str(i+1)+fileext
         data, datakey = getWaveforms()
         WriteFile(data,datakey,savename)
+        print("Waveform number "+str(i+1)+" done"
         #_thread.start_new_thread(WriteFile, (data,datakey,savename))
     
 
@@ -307,7 +312,6 @@ def maintest():
     except usb.core.USBError:
         exc = sys.exc_info()[1]
         if exc.errno == 110:
-            print("stuff")
             restartScope()
     
             try:
