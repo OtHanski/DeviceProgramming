@@ -26,18 +26,19 @@ def getFiledef():
             filedef.append(file[:-5])
 
 ### GLOBALS ###
-datafolder = "./background"
+datafolder = "./background2"
 
 #filedef = ["measurement1mJ_","measurement1mJ_bg2_"]
-filedef = ["measurement1mJ_","measurement1mJ_bg2_","measurement1mJ_05msdelay_","measurement1mJ_10msdelay_","measurement1mJ_20msdelay_","measurement1mJ_30msdelay_",\
-           "measurement1mJ_40msdelay_", "measurement1mJ_50msdelay_","measurement1mJ_60msdelay_", "measurement1mJ_70msdelay_","measurement1mJ_80msdelay_",\
-           "measurement1mJ_90msdelay_"]
+filedef = ["0.8mJ_05ms","0.8mJ_06ms","0.8mJ_07ms","0.8mJ_08ms","0.8mJ_09ms","0.8mJ_10ms",\
+            "0.8mJ_11ms", "0.8mJ_12ms", "0.8mJ_13ms", "0.8mJ_14ms", "0.8mJ_15ms", "0.8mJ_16ms",\
+            "0.8mJ_17ms", "0.8mJ_18ms", "0.8mJ_19ms", "0.8mJ_20ms", "0.8mJ_30ms", "0.8mJ_40ms",\
+            "0.8mJ_50ms", "0.8mJ_95ms",]
 autoFiledef = False
 if autoFiledef:
     getFiledef()
     
 header = getHeader()
-integrationLimits=[6.0E-7, 9.0E-7]
+integrationLimits=[3.7E-7, 5.3E-7]
 
 start_time=time.time()
 n_Files=0
@@ -86,7 +87,15 @@ def readData(filedef):
             if column != data[0]:
                 column[index]=column[index]/nFiles
     
-    writelines=""
+    writelines = ""
+    for i in range(len(header)):
+        writelines += header[i]+"\t"
+    writelines+="\n"
+    for i in range(len(data[0])):
+        for j in range(len(data)):
+            writelines += str(data[j][i])+"\t"
+        writelines += "\n"
+    
     filename = datafolder+"/OUTavg"+filedef+".dat"
     f = open(filename, "w")
     f.write(writelines)
@@ -121,6 +130,11 @@ def integrate(averagedData,filedef):
     for index in range(len(averagedData[0])):
         if averagedData[0][index] > integrationLimits[0] and averagedData[0][index] < integrationLimits[1]:
             integralRange.append(index)
+    
+    intData = np.zeros((len(data),len(integralRange)))
+    for index in range(len(integralRange)):
+        for jndex in range(len(data)):
+            intData[jndex,index] = data[jndex, integralRange[index]]
 
     writelines = "t\t"
     for i in range(1,len(header)):
@@ -137,7 +151,7 @@ def integrate(averagedData,filedef):
     f.write(writelines)
     f.close() 
  
-    return data
+    return intData
     
 def main():
     global header
@@ -157,6 +171,7 @@ def main():
             intstring += str(intData[column,-1]-intData[column,0])+"\t"
         intstring+="\n"
     
+    n_Files = len(os.listdir(datafolder))
     tot_time=time.time()-start_time
     print("Handled "+str(n_Files)+f" files in {tot_time:.2} seconds.")
     print(f"Average time per file: {tot_time/n_Files:.3} seconds")
