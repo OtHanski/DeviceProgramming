@@ -7,6 +7,14 @@ import numpy as np
 import pyvisa as visa
 from datetime import date
 
+####################################################################
+###                    QUICK USE INSTRUCTIONS:                   ###
+### Call this script from commandline, with argument number one  ###
+### stating the number of points to be measured, and two stating ###
+### the name of the measurement you're about to do (filename).   ###
+####################################################################
+
+
 def FindUSB():
     # Find the USB address the RTM3004 is plugged into.
     # Note, at the moment the program is written specifically for USB.
@@ -24,6 +32,7 @@ def FindUSB():
 ###############################################
 ### GLOBAL VARIABLES VALUE ASSIGNMENT START ###
 ###############################################
+#Please use "/" in folder structures, not "\".#
 
 # Setup device connections
 rm = visa.ResourceManager()
@@ -43,6 +52,13 @@ else:
     filename = "testdata/test"
 fileext = ".dat"
 
+# Check if user specified a folder to use.
+foldindex = filename.rfind("/")
+if not foldindex == -1:
+    measfolder = "/"+filename[:foldindex]
+else:
+    measfolder = ""
+
 # Initialize settings arrays
 CHAN_SETTINGS = []
 WAVEFORM_SETTINGS = []
@@ -59,16 +75,16 @@ OldWaveform = ""
 ComparisonChannel = 1
 
 # Data root folder
-folder = "testdata"
+savefolder = "D:/Hbeam_Calib"
 # Save folder named by measurement day
 date = date.today()
 datestring = date.strftime("%Y-%m-%d")
-folder += datestring
+savefolder += "/" + datestring
 
 # Create folders if they don't exist yet
-if not os.path.exists(folder):
-        os.makedirs(folderpath)
-        print("Folder created")
+if not os.path.exists(savefolder + measfolder):
+        os.makedirs(savefolder + measfolder)
+        print("Folder created: " + savefolder + measfolder)
 
 ###############################################
 ###      GLOBAL VARIABLE ASSIGNMENT END     ###
@@ -112,7 +128,7 @@ def init():
     # TRIG:A:LEV<n> where n corresponds to the channel (5 = external trigger)
     ### DO NOT TOUCH "FORM" COMMANDS UNLESS YOU WANNA REWRITE THE DECODER AS WELL ###
     WAVEFORM_SETTINGS = ["TIM:SCAL 100E-3", "TIM:POS 1.5E-6", "ACQ:POIN 20000", "ACQ:INT SMHD", \
-                         "TRIG:A:MODE NORM", "TRIG:A:SOUR CH1", "TRIG:A:LEV1 200E-3", "TRIG:A:EDGE:SLOP POS", \
+                         "TRIG:A:MODE AUTO", "TRIG:A:SOUR CH1", "TRIG:A:LEV1 200E-3", "TRIG:A:EDGE:SLOP POS", \
                          "FORM REAL", "FORM:BORD LSBF"]
     
     # Other settings.
@@ -282,17 +298,21 @@ def main():
     global nWaveforms
     global filename
     global fileext
+    global savefolder
     
     init()
     for i in range(nWaveforms):
-        savename = filename+"_meas"+str(i+1).zfill(len(nWaveforms))+fileext
+        savename = savefolder + "/" + filename + "_meas" + str(i+1).zfill(len(str(nWaveforms))) + fileext
         data, datakey = getWaveforms()
         WriteFile(data,datakey,savename)
-        print("Waveform number "+str(i+1)+" done")
+        if (i+1)%10 == 0:
+            print("Waveform number "+str(i+1)+" done")
         #_thread.start_new_thread(WriteFile, (data,datakey,savename))
-    
+    instr.close()
+    print("Waveform measurement finished succesfully.")
 
-def maintest():    
+def maintest():
+    ### Old program structure, here for reference ###
     global nWaveforms
     
     try:

@@ -1,6 +1,16 @@
 import numpy as np
 import os
 import time
+import tkinter as tk
+from tkinter import filedialog
+
+###########################################################################
+###                     QUICK USE INSTRUCTIONS:                         ###
+###  Call program from commandline, you will be prompted to choose the  ###
+### directory of your datafiles. After it has been chosen, program will ###
+### run automatically. You must (for now) manually set the integration  ###
+###       limits in the global parameter part of the program.           ###
+###########################################################################
 
 
 def getHeader():
@@ -27,7 +37,14 @@ def getFiledef():
             filedef.append(file[:filedefEnd])
 
 ### GLOBALS ###
-datafolder = "./background4/Grid300V"
+
+# Used for the directorz choosing
+root = tk.Tk()
+root.withdraw()
+
+# Prompt to choose the folder for your data.
+datafolder = "D:\Hbeam_Calib"
+datafolder = filedialog.askdirectory(initialdir = "D:\Hbeam_Calib")
 
 # filedef is list of file identifiers (measurement series)
 filedef = []
@@ -93,7 +110,7 @@ def readData(filedef):
             writelines += str(data[j][i])+"\t"
         writelines += "\n"
     
-    filename = datafolder+"/OUTavg"+filedef+".dat"
+    filename = datafolder+"/processed/OUTavg"+filedef+".dat"
     f = open(filename, "w")
     f.write(writelines)
     f.close() 
@@ -143,7 +160,7 @@ def integrate(averagedData,filedef):
                 writelines += str(data[j][i])+"\t"
             writelines += "\n"
 
-    filename = datafolder+"/OUTint"+filedef+".dat"
+    filename = datafolder+"/processed/OUTint"+filedef+".dat"
     f = open(filename, "w")
     f.write(writelines)
     f.close() 
@@ -180,7 +197,7 @@ def main():
     print("Handled "+str(n_Files)+f" files in {tot_time:.2} seconds.")
     print(f"Average time per file: {tot_time/n_Files:.3} seconds")
     
-    filename = datafolder+"/OUTintall"+filedef[0][0:3]+".dat"
+    filename = datafolder+"/processed/OUTintall"+filedef[0][0:3]+".dat"
     f = open(filename, "w")
     f.write(intstring)
     f.close() 
