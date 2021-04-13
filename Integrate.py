@@ -46,13 +46,17 @@ root.withdraw()
 datafolder = "D:\Hbeam_Calib"
 datafolder = filedialog.askdirectory(initialdir = "D:\Hbeam_Calib")
 
+if not os.path.exists(datafolder+"/processed"):
+        os.makedirs(datafolder+"/processed")
+        print("Folder created: " + datafolder+"/processed")
+
 # filedef is list of file identifiers (measurement series)
 filedef = []
 # If set to False, you must specify the files manually above.
 autoFiledef = True
     
 # Limits of integration. Later on should be automatised or set to be dynamically changeable.
-integrationLimits=[2.4E-7, 2.8E-7]
+integrationLimits=[-1, 1]
 
 start_time=time.time()
 n_Files=0
@@ -79,12 +83,12 @@ def readData(filedef):
             n_Files+=1
             
             tempdata = []
-            for i in range(len(lines[1].split())):
+            for i in range(len(lines[2].split())):
                 tempdata.append([])
                 
             for i in range(1,len(lines)):
                 row = lines[i].split()
-                for j in range(len(row)):
+                for j in range(len(row)):   
                     tempdata[j].append(float(row[j]))
             
             if data==[]:
@@ -164,9 +168,10 @@ def integrate(averagedData,filedef):
     f = open(filename, "w")
     f.write(writelines)
     f.close() 
- 
+    print(averagedData)
     return intData
-    
+
+
 def main():
     global header
     global start_time
@@ -186,6 +191,7 @@ def main():
     for i in filedef:
         print(i)
         averagedData = readData(i)
+        #print(averagedData)
         intData = integrate(averagedData,i)
         intstring += i+"\t"
         for column in range(len(intData)):
