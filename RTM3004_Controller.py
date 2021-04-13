@@ -128,7 +128,7 @@ def init():
     # TRIG:A:LEV<n> where n corresponds to the channel (5 = external trigger)
     ### DO NOT TOUCH "FORM" COMMANDS UNLESS YOU WANNA REWRITE THE DECODER AS WELL ###
     WAVEFORM_SETTINGS = ["TIM:SCAL 100E-3", "TIM:POS 1.5E-6", "ACQ:POIN 20000", "ACQ:INT SMHD", \
-                         "TRIG:A:MODE AUTO", "TRIG:A:SOUR CH1", "TRIG:A:LEV1 200E-3", "TRIG:A:EDGE:SLOP POS", \
+                         "TRIG:A:MODE NORM", "TRIG:A:SOUR CH1", "TRIG:A:LEV1 200E-3", "TRIG:A:EDGE:SLOP POS", \
                          "FORM REAL", "FORM:BORD LSBF"]
     
     # Other settings.
