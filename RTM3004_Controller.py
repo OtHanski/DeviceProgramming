@@ -12,22 +12,28 @@ from datetime import date
 ### Call this script from commandline, with argument number one  ###
 ### stating the number of points to be measured, and two stating ###
 ### the name of the measurement you're about to do (filename).   ###
+###     Third, optional argument states trigger delay in ms      ###
 ####################################################################
 
 
-def FindUSB():
+def FindDevices():
     # Find the USB address the RTM3004 is plugged into.
     # Note, at the moment the program is written specifically for USB.
+    global Devices
     ResList=rm.list_resources()
     
     for ResID in ResList:
-        inst = rm.open_resource(ResID)
-        ID = inst.query("*IDN?")
+        instr = rm.open_resource(ResID)
+        ID = instr.query("*IDN?")
+        # Check for RTM3004
         if ID == 'Rohde&Schwarz,RTM3004,1335.8794k04/103028,01.550\n' and ResID[0:3]=="USB":
-            return ResID
-    
+            Devices.append({"device": "RTM3004", "visaID": ResID})
+        # Check for Keysight Trueform
+        if ID == 'Agilent Technologies,33622A,MY53804342,A.02.00-2.25-03-64-02\n' and ResID[0:3]=="USB":
+            Devices.append({"device": "Trueform", "visaID": ResID})
+        
     # If RTM3004 was not found by the loop, give error message and quit.
-    sys.exit("ERROR: RTM3004 was not found among the connected USB devices.")
+
     
 ###############################################
 ### GLOBAL VARIABLES VALUE ASSIGNMENT START ###
@@ -36,8 +42,30 @@ def FindUSB():
 
 # Setup device connections
 rm = visa.ResourceManager()
-USBID = FindUSB()
-instr = rm.open_resource(USBID)
+# Devices is a list of the detected instruments. Dictionaries, keys "device" and "visaID".
+Devices = []
+FindDevices()
+
+# Set up communications with devices
+try:
+    RTMID = next(dev for dev in Devices if dev["device"] == "RTM3004")["visaID"]
+    RTM = rm.open_resource(RTMID)
+except StopIteration:
+    print("ERROR: RTM3004 was not found among the connected USB devices.")
+    sys.exit("Quitting program")
+
+try:
+    TrueformID = next(dev for dev in Devices if dev["device"] == "Trueform")["visaID"]
+    Trueform = rm.open_resource(TrueformID)
+    Wavegen_connected = True
+except StopIteration:
+    print("Waveform generator not detected.")
+    Waiter = input("Continue without the Waveform generator? y/n")
+    if Waiter == "n":
+        sys.exit("Program ended by user")
+    if Waiter == "y":
+        Wavegen_connected = False
+    
 
 # First system argument will tell how many Waveforms to capture
 if len(sys.argv) < 2:
@@ -52,6 +80,11 @@ else:
     filename = "testdata/test"
 fileext = ".dat"
 
+if len(sys.argv) == 4:
+    delay = str(sys.argv[3])
+else:
+    delay = ""
+
 # Check if user specified a folder to use.
 foldindex = filename.rfind("/")
 if not foldindex == -1:
@@ -63,6 +96,7 @@ else:
 CHAN_SETTINGS = []
 WAVEFORM_SETTINGS = []
 MISC_SETTINGS = []
+TRUEFORM_SETTINGS = []
 
 # [t_start, t_stop, n_samples, values per interval]
 header = ""
@@ -75,7 +109,7 @@ OldWaveform = ""
 ComparisonChannel = 1
 
 # Data root folder
-savefolder = "D:/Hbeam_Calib"
+savefolder = "C:/Users/ottoh/Desktop/Oscilloscope/testdata"
 # Save folder named by measurement day
 date = date.today()
 datestring = date.strftime("%Y-%m-%d")
@@ -110,15 +144,15 @@ def restartScope():
             print('.', end='', flush=True)
     print('')
 
-def init():
+def initRTM():
     global CHAN_SETTINGS
     global WAVEFORM_SETTINGS
     global MISC_SETTINGS
     # First, of course, reset the instrument
-    instr.write("*RST")
+    RTM.write("*RST")
     # Basic channel settings, sublists ordered by channel. 
     # Only edit the values here, add other commands to MISC_SETTINGS
-    CHAN_SETTINGS = [["CHAN1:STAT ON", "CHAN1:COUP DC", "CHAN1:SCAL 2", "CHAN1:OFFS 0"],\
+    CHAN_SETTINGS = [["CHAN1:STAT ON", "CHAN1:COUP DC", "CHAN1:SCAL 500E-3", "CHAN1:OFFS 0"],\
                      ["CHAN2:STAT OFF", "CHAN2:COUP DC", "CHAN2:SCAL 200E-3", "CHAN2:OFFS -800E-3"],\
                      ["CHAN3:STAT OFF", "CHAN3:COUP DC", "CHAN3:SCAL 0.5", "CHAN3:OFFS 1.5"], \
                      ["CHAN4:STAT OFF", "CHAN4:COUP DC", "CHAN4:SCAL 2", "CHAN4:OFFS 0"]]
@@ -127,7 +161,7 @@ def init():
     # TRIG:A:SOUR CH<n>|EXT
     # TRIG:A:LEV<n> where n corresponds to the channel (5 = external trigger)
     ### DO NOT TOUCH "FORM" COMMANDS UNLESS YOU WANNA REWRITE THE DECODER AS WELL ###
-    WAVEFORM_SETTINGS = ["TIM:SCAL 100E-3", "TIM:POS 1.5E-6", "ACQ:POIN 20000", "ACQ:INT SMHD", \
+    WAVEFORM_SETTINGS = ["TIM:SCAL 50E-3", "TIM:POS 0E-6", "ACQ:POIN 20000", "ACQ:INT SMHD", \
                          "TRIG:A:MODE NORM", "TRIG:A:SOUR CH1", "TRIG:A:LEV1 200E-3", "TRIG:A:EDGE:SLOP POS", \
                          "FORM REAL", "FORM:BORD LSBF"]
     
@@ -135,26 +169,28 @@ def init():
     MISC_SETTINGS = []
     
     # Check connection to device
-    if instr.query("*IDN?") != 'Rohde&Schwarz,RTM3004,1335.8794k04/103028,01.550\n':
-        print("ERROR: WRONG ID DURING INIT, RESTARTING SCOPE")
-        instr.close()
+    if RTM.query("*IDN?") != 'Rohde&Schwarz,RTM3004,1335.8794k04/103028,01.550\n':
+        print("ERROR: WRONG ID DURING INIT, EXITING PROGRAM")
+        RTM.close()
+        Trueform.close()
+        sys.exit()
         #restartScope()
     print("Scope found. Initializing",end='', flush=True)
     
     # Run basic channel settings
     for CHAN in CHAN_SETTINGS:
         for command in CHAN:
-            instr.write(command)
+            RTM.write(command)
     
     # Run Waveform settings
     for command in WAVEFORM_SETTINGS:
-        instr.write(command)
+        RTM.write(command)
     
     # Run misc settings
     for command in MISC_SETTINGS:
-        instr.write(command)
+        RTM.write(command)
     
-    # Wait for a bit. Uncertain if necessary.
+    # Wait for a bit for the scope to update
     for rep in range(12):
         time.sleep(0.5)
         print('.', end='', flush=True)
@@ -162,13 +198,40 @@ def init():
         
     # Fetch header, 
     FetchHeader()
+
+def initTrueform():
+    global TRUEFORM_SETTINGS
     
+    Trueform.write("*RST")
+    TRUEFORM_SETTINGS = ["SOUR1:FUNC PULS", "SOUR1:FREQ 15", "SOUR1:FUNC:PULS:WIDT 10E-9", \
+                         "BURST:NCYC 1", "BURST:STAT ON",\
+                         "TRIG:SOUR IMM", "TRIG:DEL 1E-3"]
+
     
+    # Check that we can still properly connect
+    if RTM.query("*IDN?") != 'Rohde&Schwarz,RTM3004,1335.8794k04/103028,01.550\n':
+        print("ERROR: WRONG ID DURING INIT, EXITING PROGRAM")
+        RTM.close()
+        Trueform.close()
+        sys.exit()
+    print("Waveform generator found, initializing",end='', flush=True)
+    
+    for command in TRUEFORM_SETTINGS:
+        Trueform.write(command)
+    if delay != "":
+        Trueform.write("TRIG:DEL " + delay + "E-3")
+
+    # Wait for a bit for the scope to update
+    for rep in range(6):
+        time.sleep(0.5)
+        print('.', end='', flush=True)
+    print('', end='\n', flush=True) 
+ 
 def FetchHeader():
     # Changes the 
     global header
     # [t_start, t_stop, n_samples, values per interval]
-    headerstring = instr.query("CHAN:DATA:HEAD?")
+    headerstring = RTM.query("CHAN:DATA:HEAD?")
     # Parse numerical values from the string format header
     sep1 = headerstring.find(",");
     sep2 = headerstring.find(",",sep1+1);
@@ -195,7 +258,7 @@ def getWaveforms():
     
     # Check which channels are online for measurement
     for i in range(len(CHANMEAS)):
-        STAT = int(instr.query("CHAN"+str(i+1)+":STAT?"))
+        STAT = int(RTM.query("CHAN"+str(i+1)+":STAT?"))
         if i+1==ComparisonChannel and STAT==0:
             sys.exit("ERROR: Comparison channel offline, quitting program")
         if STAT == 1:
@@ -209,29 +272,29 @@ def getWaveforms():
         datakey=[]
         # Read all data channels
         if CHANMEAS[0]:
-            instr.write("CHAN1:DATA?")
-            ch1 = instr.read_raw()
+            RTM.write("CHAN1:DATA?")
+            ch1 = RTM.read_raw()
             data.append(ch1)
             datakey.append("CHAN1")
         if CHANMEAS[1]:
-            instr.write("CHAN2:DATA?")
-            ch2 = instr.read_raw()
+            RTM.write("CHAN2:DATA?")
+            ch2 = RTM.read_raw()
             data.append(ch2)
             datakey.append("CHAN2")
         if CHANMEAS[2]:
-            instr.write("CHAN3:DATA?")
-            ch3 = instr.read_raw()
+            RTM.write("CHAN3:DATA?")
+            ch3 = RTM.read_raw()
             data.append(ch3)
             datakey.append("CHAN3")
         if CHANMEAS[3]:
-            instr.write("CHAN4:DATA?")
-            ch4 = instr.read_raw()
+            RTM.write("CHAN4:DATA?")
+            ch4 = RTM.read_raw()
             data.append(ch4)
             datakey.append("CHAN4") 
         
         # Read the comparison data
-        instr.write("CHAN"+str(ComparisonChannel)+":DATA?")
-        ch_check = instr.read_raw()
+        RTM.write("CHAN"+str(ComparisonChannel)+":DATA?")
+        ch_check = RTM.read_raw()
         
         # Check that data has changed from last measurement (OldWaveform) 
         # and that oscilloscope didn't refresh mid-measurement (ch_check)
@@ -289,9 +352,9 @@ def WriteFile(data, datakey, filename="test.dat"):
             writelines += format(data[j][i],"+.8e")+"\t"
         writelines += "\n"
         
-    f = open(filename,'w')
-    f.write(writelines)
-    f.close() 
+    file = open(filename,'w')
+    file.write(writelines)
+    file.close()
 
 
 def main():
@@ -300,7 +363,11 @@ def main():
     global fileext
     global savefolder
     
-    init()
+    # Initialize devices
+    initRTM()
+    if Wavegen_connected:
+        initTrueform()
+    # Measure stuff
     for i in range(nWaveforms):
         savename = savefolder + "/" + filename + "_meas" + str(i+1).zfill(len(str(nWaveforms))) + fileext
         data, datakey = getWaveforms()
@@ -308,7 +375,8 @@ def main():
         if (i+1)%10 == 0:
             print("Waveform number "+str(i+1)+" done")
         #_thread.start_new_thread(WriteFile, (data,datakey,savename))
-    instr.close()
+    RTM.close()
+    Trueform.close()
     print("Waveform measurement finished succesfully.")
 
 def maintest():

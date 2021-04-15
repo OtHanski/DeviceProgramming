@@ -43,8 +43,8 @@ root = tk.Tk()
 root.withdraw()
 
 # Prompt to choose the folder for your data.
-datafolder = "D:\Hbeam_Calib"
-datafolder = filedialog.askdirectory(initialdir = "D:\Hbeam_Calib")
+datafolder = "."
+datafolder = filedialog.askdirectory(initialdir = "..")
 
 if not os.path.exists(datafolder+"/processed"):
         os.makedirs(datafolder+"/processed")
@@ -133,7 +133,7 @@ def integrate(averagedData,filedef):
     #        offsetData[0].append(averagedData[0][i])
     #        offsetData[1].append(averagedData[1][i])
     #offset = sum(offsetData[1])/len(offsetData[1])
-    offset = 0.05
+    offset = 0.000067
     #print("Calculated offset: "+str(offset))
     
     data = np.zeros((2*len(averagedData)-1,len(averagedData[0])))
@@ -167,8 +167,7 @@ def integrate(averagedData,filedef):
     filename = datafolder+"/processed/OUTint"+filedef+".dat"
     f = open(filename, "w")
     f.write(writelines)
-    f.close() 
-    print(averagedData)
+    f.close()
     return intData
 
 
@@ -191,7 +190,6 @@ def main():
     for i in filedef:
         print(i)
         averagedData = readData(i)
-        #print(averagedData)
         intData = integrate(averagedData,i)
         intstring += i+"\t"
         for column in range(len(intData)):
