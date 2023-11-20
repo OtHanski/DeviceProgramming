@@ -1,0 +1,297 @@
+{
+    "HELP": 
+		{
+			"function": "HELP",
+			"description": "Fetches description of command",
+			"arguments": "[command]"
+		},
+			
+			
+	"SET":	
+		{
+			"CHAN<n>":
+				{
+					"STATUS":
+						{
+							"function": "RTMCHANSTAT",
+							"description": "Sets channel on or off",
+							"arguments": "ON|OFF",
+							"instr": "RTM3004"
+						},
+					"OFFSET":	
+						{
+							"function": "RTMCHANOFFSET",
+							"description": "Sets channel offset (in volts)",
+							"arguments": "<float> [V]",
+							"instr": "RTM3004"
+						},
+					"SCALE":
+						{
+							"function": "RTMCHANSCALE",
+                        	"description": "Sets channel y-scaling (in volts)",
+                        	"arguments": "<float> [V]",
+							"instr": "RTM3004"
+                        },
+					"description": "Controls the oscilloscope channel (1-4) settings",
+					"arguments": "channel number <n>"
+				},
+			"TIME":
+				{
+					"OFFSET":
+						{
+							"function": "RTMTIMEOFFSET",
+							"description": "Sets the time offset in the oscilloscope signal (in seconds)",
+							"arguments": "<float> [s]",
+							"instr": "RTM3004"
+						},
+					"SCALE":
+						{
+							"function": "RTMTIMESCALE",
+							"description": "Sets time scaling of the oscilloscope (seconds per interval)",
+							"arguments": "<float> [s]",
+							"instr": "RTM3004"
+						},
+					"description": "Controls time settings of the oscilloscope",
+					"arguments": "None"
+				},
+			"DATA":
+				{
+					"POINTS":
+						{
+							"function": "RTMDATAPOINTS",
+							"description": "Sets number of data points per Waveform",
+							"arguments": "<int>",
+							"instr": "RTM3004"
+						},
+					"description": "Adjusts data settings of the oscilloscope",
+					"arguments": "None"
+				},
+			"TRIGGER":
+				{
+					"SOURCE":
+						{
+					    	"function": "RTMTRIGSOURCE",
+					    	"description": "Sets the oscilloscope trigger source channel n (1-4)",
+					    	"arguments": "CH<n>",
+							"instr": "RTM3004"
+					    },
+					"MODE":
+						{
+					    	"function": "RTMTRIGMODE",
+							"description": "Sets the oscilloscope trigger mode",
+							"arguments": "AUTO|NORM",
+							"instr": "RTM3004"
+						},
+					"LEVEL":
+						{
+                        	"function": "RTMTRIGLEVEL",
+                        	"description": "Sets the oscilloscope trigger level (in volts)",
+                        	"arguments": "<float> [V]",
+							"instr": "RTM3004"
+                        },
+					"DELAY":
+						{
+                        	"function": "TRUEFORMDELAY",
+                        	"description": "Sets the delay of the Trueform Wave generator (in seconds)",
+                        	"arguments": "<float> [s]",
+							"instr": "TRUEFORM"
+                        }
+				},
+			"FILE":
+				{
+					"NAME":
+						{
+                        	"function": "SETMEASFILENAME",
+                        	"description": "Sets the measurement file name, resets measurement name",
+                        	"arguments": "[measfolder/]<filename>"
+                        },
+					"ROOTFOLDER":
+						{
+                        	"function": "SETROOTFOLDER",
+                        	"description": "Sets the measurement data root folder. Avoid messing with this.",
+                        	"arguments": "<folderpath>"
+                        },
+					"description": "File settings",
+					"arguments": "None"
+				},
+			"MEASUREMENT":
+				{
+					"function": "SETMEASUREMENT",
+					"description": "Sets the measurement name, default is the set filename.",
+					"arguments": "<str>"
+				},
+			"description": "Used to adjust measurement system parameters",
+			"arguments": "None"
+		},
+		
+	
+	"SCPI":
+		{
+			"RTM":
+				{
+					"WRITE":
+						{
+							"function": "RTMWRITESCPI",
+							"description": "Visa write to the RTM oscilloscope",
+							"arguments": "<SCPIstring>",
+							"instr": "RTM3004"
+						},
+					"READ":
+						{
+					    	"function": "RTMREADSCPI",
+				        	"description": "Visa read and print the output of RTM oscilloscope",
+				        	"arguments": "None",
+							"instr": "RTM3004"
+		                },
+					"QUERY":
+						{
+							"function": "RTMQUERYSCPI",
+							"description": "Visa query and print for the RTM oscilloscope",
+							"arguments": "<SCPIstring>",
+							"instr": "RTM3004"
+						}
+				},
+			"TRUEFORM":
+				{
+					"WRITE":
+						{
+							"function": "TRUEFORMWRITESCPI",
+							"description": "Visa write to the Trueform Wave Generator",
+							"arguments": "<SCPIstring>",
+							"instr": "Trueform"
+						},
+					"READ":
+						{
+					    	"function": "TRUEFORMREADSCPI",
+				        	"description": "Visa read and print the output of Trueform Wave Generator",
+				        	"arguments": "None",
+							"instr": "Trueform"
+			            },
+					"QUERY":
+						{
+							"function": "TRUEFORMQUERYSCPI",
+							"description": "Visa query and print for the Trueform Wave Generator",
+							"arguments": "<SCPIstring>",
+							"instr": "Trueform"
+						}
+				}
+		},	
+						
+						
+	"SETTINGS":
+		{
+			"SAVE":
+				{
+					"function": "SAVE_SETTINGS",
+					"description": "Save current settings with custom name.",
+					"arguments": "<str: settings name>"
+				},
+			"LOAD":
+				{
+					"function": "LOAD_SETTINGS",
+					"description": "Load settings saved previously",
+					"arguments": "<str: settings name>"
+				},
+			"SHOW":
+				{
+					"function": "SHOW_SETTINGS",
+					"description": "Show current settings",
+					"arguments": "None"
+				},
+			"description": "Handles system settings",
+			"arguments": "None"
+		},
+		
+		
+	"INIT":
+		{
+			"RTM":
+				{
+					"function": "RTMINIT",
+					"description": "Initialises the RTM3004 according to current settings",
+					"arguments": "None",
+					"instr": "RTM3004"
+				},
+			"TRUEFORM":
+				{
+					"function": "TRUEFORMINIT",
+					"description": "Initialises the Trueform Wave Generator according to current settings",
+					"arguments": "None",
+					"instr": "Trueform"
+				},
+			"description": "Re-initializes devices (using current settings)",
+			"arguments": "None"
+		},
+		
+		
+	"MEASURE":
+		{
+			"function": "RTMMEASURE",
+			"description": "Measures n waveforms from the oscilloscope",
+			"arguments": "<n>",
+			"instr": "RTM3004"
+		},
+		
+		
+	"CONVERT":
+		{
+			"DAT":
+			{
+				"function": "ConvertDAT",
+				"description": "Converts chosen json measurement or statistics files to .dat",
+				"arguments": "None"
+			},
+		"description": "Used to convert file formats",
+		"arguments": "None"
+		},
+		
+		
+	"WAIT":
+		{
+			"function": "WAIT",
+			"description": "Wait n seconds",
+			"arguments": "<n>"
+		},
+		
+		
+	"SCRIPT":
+		{
+			"function": "RUNSCRIPT",
+			"description": "Runs a predefined measurement script file",
+			"arguments": "[filename]"
+		},
+		
+		
+	"FOR<n>{}":
+		{
+			"function": "SCRIPTLOOP",
+			"description": "Repeats the commands inside the curly brackets n times",
+			"arguments": "None"
+		},
+		
+		
+	"HISTOGRAM":
+		{
+			"function": "HISTOGRAM",
+			"description": "Run the statistics calculator",
+			"arguments": "None"
+		},
+	"STATISTICS":
+		{
+			"function": "STATISTICS",
+			"description": "Run the statistics calculator",
+			"arguments": "None"
+		},
+	"QUIT":
+		{
+			"function": "SYSEXIT",
+			"description": "Exit program",
+			"arguments": "None"
+		},
+	"EEEEEE":
+		{
+			"function": "EEEEEE",
+			"description": ":P",
+			"arguments": "None"
+		}
+}

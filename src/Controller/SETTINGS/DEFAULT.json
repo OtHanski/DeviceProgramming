@@ -1,0 +1,86 @@
+{
+    "ERROR": "",
+    "FILE": {
+        "FILENAME": "meastestA",
+        "MEASFOLDER": "Calib",
+        "MEASUREMENT": "contest",
+        "ROOTFOLDER": "C:/Data/Hbeam"
+    },
+    "RTM": {
+        "STAT": "ON",
+        "IDN": ["Rohde&Schwarz,RTM3004,1335.8794k04/103028,01.550","Rohde&Schwarz,RTB2004"],
+        "ACQUISITION_SETTINGS": {
+            "INT": "SMHD",
+            "POIN": "20000"
+        },
+        "CHAN_SETTINGS": {
+            "CHAN1": {
+                "COUP": "DC",
+                "OFFS": "0",
+                "SCAL": "2E-3",
+                "STAT": "ON"
+            },
+            "CHAN2": {
+                "COUP": "DC",
+                "OFFS": "0",
+                "SCAL": "500E-3",
+                "STAT": "OFF"
+            },
+            "CHAN3": {
+                "COUP": "DC",
+                "OFFS": "0",
+                "SCAL": "500E-3",
+                "STAT": "OFF"
+            },
+            "CHAN4": {
+                "COUP": "DC",
+                "OFFS": "0",
+                "SCAL": "500E-3",
+                "STAT": "OFF"
+            }
+        },
+        "FORMAT_SETTINGS": {
+            "FORM": "REAL",
+            "FORM:BORD": "LSBF"
+        },
+        "TIME_SETTINGS": {
+            "POS": "2E-6",
+            "SCAL": "1E-6"
+        },
+        "TRIG_SETTINGS": {
+            "LEV": "5E-3",
+            "MODE": "NORM",
+            "SLOP": "POS",
+            "SOUR": "CH1"
+        },
+        "VISAID": "USB0::0x0AAD::0x01D6::103028::0::INSTR"
+    },
+    "TRUEFORM": {
+        "BURST:NCYC": "1",
+        "BURST:STAT": "ON",
+        "DELAY": "5E-3",
+        "FREQ": "1.05E3",
+        "FUNC": "PULS",
+        "IDN": ["Agilent Technologies,33622A", "Rigol Technologies,DG811"],
+        "STAT": "ON",
+        "TRIG:SOUR": "EXT",
+        "VISAID": "",
+        "VOLT": "5",
+        "WIDT": "100E-9"
+    },
+	"LAKESHORE": {
+		"STAT": "ON",
+		"IDN": ["Lakeshore whatever"]
+	},
+	"POWERSENSORU8": {
+		"STAT": "OFF",
+		"IDN": ["Keysight Technologies,U8481A"]
+	},
+	"MAXIGAUGE": {
+		"STAT": "ON",
+		"ADDRESS": "ASRL8::INSTR",
+		"IDN": ["TPG366,PTG28770"],
+		"CHAN": [1,2,3,4]
+	},
+	"COMMENT": ""
+}

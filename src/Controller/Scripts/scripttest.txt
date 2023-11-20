@@ -1,0 +1,4 @@
+help set
+asd
+settings:show
+wait 3
